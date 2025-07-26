@@ -1,0 +1,48 @@
+jenkins:
+  systemMessage: |
+    practice_3rd_course — Jenkins controlled entirely by Configuration as Code (JCasC).
+    Admin user and demo job are provisioned from this repo.
+  numExecutors: 2
+  mode: NORMAL
+  disableRememberMe: false
+  scmCheckoutRetryCount: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_ID}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+unclassified:
+  location:
+    url: "${JENKINS_URL}"
+  # NOTE: Telegram plugin global configuration via JCasC is not well documented.
+  # The pipeline uses 'telegramSend' if configured, and falls back to curl with TELEGRAM_* env vars.
+  # If you configure the plugin via UI, it will also work.
+  # Example (may vary by plugin version):
+  # telegramBot:
+  #   botToken: "${TELEGRAM_BOT_TOKEN}"
+  #   botName: "MyJenkinsBot"
+  #   defaultChatId: "${TELEGRAM_CHAT_ID}"
+jobs:
+  - script: >
+      pipelineJob('practice_3rd_course') {
+        description('CI/CD demo pipeline defined in Jenkinsfile from the repository')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url(System.getenv('GIT_REPO_URL') ?: 'https://github.com/your-username/practice_3rd_course.git') }
+                branches(System.getenv('GIT_BRANCH') ?: 'main')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(true)
+          }
+        }
+        triggers {
+          scm('H/5 * * * *')
+        }
+      }

@@ -1,0 +1,9 @@
+pandas==2.2.2
+SQLAlchemy==2.0.30
+psycopg2-binary==2.9.9
+pytest==8.2.0
+black==24.4.2
+ruff==0.4.7
+bandit==1.7.9
+# GE placeholder (legacy API for simple expectations)
+great_expectations==0.16.16

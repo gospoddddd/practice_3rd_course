@@ -1,0 +1,10 @@
+configuration-as-code
+credentials-binding
+job-dsl
+git
+workflow-aggregator
+pipeline-stage-view
+docker-workflow
+pipeline-utility-steps
+blueocean
+telegram-notifications

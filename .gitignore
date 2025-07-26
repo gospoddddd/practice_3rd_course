@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+.ge_store/
+.gx/
+great_expectations/
+# Data / artifacts
+*.db
+*.sqlite
+*.log
+dist/
+build/
+# VSCode / IDE
+.vscode/
+.idea/
+# Docker
+**/.DS_Store
+docker/volumes/**
+# Windows
+Thumbs.db
