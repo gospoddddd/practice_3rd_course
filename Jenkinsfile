@@ -8,13 +8,12 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps {
-        checkout([$class: 'GitSCM',
-          branches: [[name: "*/${env.GIT_BRANCH ?: 'main'}"]],
-          userRemoteConfigs: [[url: "${env.GIT_REPO_URL ?: 'https://github.com/your-username/practice_3rd_course.git'}"]]
-        ])
-      }
-    }
+		steps {
+			deleteDir()   // очистим воркспейс, чтобы убрать старый origin с /tree/master
+			checkout scm  // используем тот же SCM, что и для получения Jenkinsfile
+		}
+	}
+
 
     stage('Init env') {
       steps {
