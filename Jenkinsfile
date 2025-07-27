@@ -2,8 +2,8 @@ pipeline {
   agent any
 
   options {
-    timestamps()
-    skipDefaultCheckout(true)
+    // timestamps()  // требует плагин Timestamper — убираем
+    skipDefaultCheckout()
   }
 
   stages {
@@ -19,7 +19,6 @@ pipeline {
     stage('Init env') {
       steps {
         script {
-          // Значения по умолчанию + возможность переопределить через .env
           env.REGISTRY_FROM_JENKINS = (env.REGISTRY_HOST_FROM_JENKINS?.trim()) ? env.REGISTRY_HOST_FROM_JENKINS : 'host.docker.internal:5000'
           env.REGISTRY_FROM_HOST    = (env.REGISTRY_HOST_FROM_HOST?.trim())    ? env.REGISTRY_HOST_FROM_HOST    : 'localhost:5000'
           env.APP_NAME = 'practice_3rd_course/app'
@@ -46,7 +45,6 @@ pipeline {
           ruff check app
           black --check app
           pytest -q
-          # GE placeholder — предупреждение, но не проваливаем сборку
           python app/dq/check_ge.py || echo "[WARN] GE placeholder failed or skipped"
         '''
       }
