@@ -1,24 +1,32 @@
-\
 pipeline {
   agent any
-  environment {
-    REGISTRY_FROM_JENKINS = "${REGISTRY_HOST_FROM_JENKINS ?: 'host.docker.internal:5000'}"
-    REGISTRY_FROM_HOST    = "${REGISTRY_HOST_FROM_HOST ?: 'localhost:5000'}"
-    APP_NAME = "practice_3rd_course/app"
-  }
+
   options {
     timestamps()
     skipDefaultCheckout(true)
   }
+
   stages {
     stage('Checkout') {
       steps {
         checkout([$class: 'GitSCM',
-          branches: [[name: env.GIT_BRANCH ?: '*/main']],
-          userRemoteConfigs: [[url: env.GIT_URL ?: (env.GIT_REPO_URL ?: 'https://github.com/your-username/practice_3rd_course.git')]]
+          branches: [[name: "*/${env.GIT_BRANCH ?: 'main'}"]],
+          userRemoteConfigs: [[url: "${env.GIT_REPO_URL ?: 'https://github.com/your-username/practice_3rd_course.git'}"]]
         ])
       }
     }
+
+    stage('Init env') {
+      steps {
+        script {
+          // Значения по умолчанию + возможность переопределить через .env
+          env.REGISTRY_FROM_JENKINS = (env.REGISTRY_HOST_FROM_JENKINS?.trim()) ? env.REGISTRY_HOST_FROM_JENKINS : 'host.docker.internal:5000'
+          env.REGISTRY_FROM_HOST    = (env.REGISTRY_HOST_FROM_HOST?.trim())    ? env.REGISTRY_HOST_FROM_HOST    : 'localhost:5000'
+          env.APP_NAME = 'practice_3rd_course/app'
+        }
+      }
+    }
+
     stage('Lint & Test in Docker') {
       agent {
         docker {
@@ -38,23 +46,24 @@ pipeline {
           ruff check app
           black --check app
           pytest -q
-          # Run DQ placeholder (GE). Non-critical: do not fail pipeline on placeholder errors
+          # GE placeholder — предупреждение, но не проваливаем сборку
           python app/dq/check_ge.py || echo "[WARN] GE placeholder failed or skipped"
         '''
       }
     }
+
     stage('Build & Push Image') {
       steps {
         script {
-          def short = sh(script: "git rev-parse --short=7 HEAD", returnStdout: true).trim()
-          env.IMAGE_TAG = short
-          sh '''
+          env.IMAGE_TAG = sh(script: "git rev-parse --short=7 HEAD", returnStdout: true).trim()
+          sh """
             docker build -t ${env.REGISTRY_FROM_JENKINS}/${env.APP_NAME}:${env.IMAGE_TAG} -f app/Dockerfile .
             docker push ${env.REGISTRY_FROM_JENKINS}/${env.APP_NAME}:${env.IMAGE_TAG}
-          '''
+          """
         }
       }
     }
+
     stage('Approval') {
       steps {
         timeout(time: 15, unit: 'MINUTES') {
@@ -62,14 +71,16 @@ pipeline {
         }
       }
     }
+
     stage('Deploy to local PROD (docker-compose.prod.yml)') {
       steps {
-        sh '''
+        sh """
           APP_IMAGE=${env.REGISTRY_FROM_HOST}/${env.APP_NAME}:${env.IMAGE_TAG} docker compose -f docker-compose.prod.yml up -d
-        '''
+        """
       }
     }
   }
+
   post {
     success {
       script {
@@ -77,11 +88,11 @@ pipeline {
         try {
           telegramSend message: msg
         } catch (err) {
-          sh '''
+          sh """
             curl -s -X POST https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage \
               -d chat_id=${env.TELEGRAM_CHAT_ID} \
               -d text="${msg}"
-          ''' 
+          """
         }
       }
     }
@@ -91,11 +102,11 @@ pipeline {
         try {
           telegramSend message: msg
         } catch (err) {
-          sh '''
+          sh """
             curl -s -X POST https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage \
               -d chat_id=${env.TELEGRAM_CHAT_ID} \
               -d text="${msg}"
-          '''
+          """
         }
       }
     }
