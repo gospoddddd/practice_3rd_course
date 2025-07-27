@@ -8,11 +8,12 @@ pipeline {
 
   stages {
     stage('Checkout') {
-		steps {
-			deleteDir()   // очистим воркспейс, чтобы убрать старый origin с /tree/master
-			checkout scm  // используем тот же SCM, что и для получения Jenkinsfile
-		}
-	}
+      steps {
+        deleteDir()   // чистим рабочий каталог
+        // делаем полноценный clone, чтобы избежать ошибки "not in a git directory"
+        git url: env.GIT_REPO_URL ?: 'https://github.com/your-username/practice_3rd_course.git', branch: env.GIT_BRANCH ?: 'main'
+      }
+    }
 
 
     stage('Init env') {
