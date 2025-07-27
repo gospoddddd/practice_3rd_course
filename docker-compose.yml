@@ -11,16 +11,17 @@ services:
     ports:
       - "8080:8080"
       - "50000:50000"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./jenkins/casc:/var/jenkins_home/casc_configs:ro
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
       - CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/jenkins.yaml
     depends_on:
       - registry
       - postgres
+    user: "0:0"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins/casc:/var/jenkins_home/casc_configs:ro
 
   registry:
     image: registry:2
